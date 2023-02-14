@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as stateHelper from './state-helper'
 import {wait} from './wait'
+import {WorkflowJob} from '@octokit/webhooks-types'
 
 type Status = 'failure' | 'pending' | 'success'
 
@@ -25,49 +26,17 @@ async function cleanup(): Promise<void> {
   }
 }
 
-function job2status(
-  job: {
-    id: number
-    run_id: number
-    node_id: string
-    head_sha: string
-    url: string
-    html_url: string | null
-    status: 'completed' | 'queued' | 'in_progress'
-    conclusion: string | null
-    started_at: string
-    completed_at: string | null
-    name: string
-    steps?:
-      | {
-          status: 'completed' | 'queued' | 'in_progress'
-          conclusion: string | null
-          name: string
-          number: number
-          started_at?: string | null | undefined
-          completed_at?: string | null | undefined
-        }[]
-      | undefined
-    check_run_url: string
-  },
-  isCleanUp: boolean
-): Status {
+function job2status(job: WorkflowJob, isCleanUp: boolean): Status {
   if (!isCleanUp) {
     return 'pending'
   }
   if (!job.steps) {
     return 'success'
   }
-  for (const value of job.steps) {
-    if (!value.conclusion) continue
-    core.info(value.conclusion)
-  }
   // Find step with failure instead of relying on job.conclusion because this
   // (post) action itself is one of a step of this job and job.conclusion is
   // always null while running this action.
-  const failedStep = job.steps.find(
-    step => step.conclusion === 'failure' || step.conclusion === 'cancelled'
-  )
+  const failedStep = job.steps.find(step => step.conclusion === 'failure')
   if (failedStep) {
     return 'failure'
   }
@@ -98,7 +67,9 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
   const token = core.getInput('github_token')
   const octokit = github.getOctokit(token)
   if (isCleanUp) {
-    core.info('Waiting 10 secs to wait for other steps job completion are propagated to GitHub API response.')
+    core.info(
+      'Waiting 10 secs to wait for other steps job completion are propagated to GitHub API response.'
+    )
     await wait(10 * 1000)
   }
   const jobs = await octokit.rest.actions.listJobsForWorkflowRun({
@@ -111,12 +82,14 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
   core.debug(`Jobs for this run are: ${JSON.stringify(jobs, undefined, 2)}`)
   const job = jobs.data.jobs.find(j => j.run_id === context.runId)
   if (!job) {
-    throw new Error(`job not found: ${jobName(context.job)}, run id: ${context.runId}`)
+    throw new Error(
+      `job not found: ${jobName(context.job)}, run id: ${context.runId}`
+    )
   }
   const state =
     context.payload.action === 'requested' && requestedAsPending()
       ? 'pending'
-      : job2status(job, isCleanUp)
+      : job2status(job as WorkflowJob, isCleanUp)
   const resp = await octokit.rest.repos.createCommitStatus({
     owner: context.repo.owner,
     repo: context.repo.repo,

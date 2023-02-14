@@ -9565,15 +9565,10 @@ function job2status(job, isCleanUp) {
     if (!job.steps) {
         return 'success';
     }
-    for (const value of job.steps) {
-        if (!value.conclusion)
-            continue;
-        core.info(value.conclusion);
-    }
     // Find step with failure instead of relying on job.conclusion because this
     // (post) action itself is one of a step of this job and job.conclusion is
     // always null while running this action.
-    const failedStep = job.steps.find(step => step.conclusion === 'failure' || step.conclusion === 'cancelled');
+    const failedStep = job.steps.find(step => step.conclusion === 'failure');
     if (failedStep) {
         return 'failure';
     }
@@ -9597,7 +9592,7 @@ function postStatus(isCleanUp) {
         const context = github.context;
         core.debug(`Context received is: ${JSON.stringify(context, undefined, 2)}`);
         if (context.eventName !== 'workflow_run') {
-            throw new Error(`This is not workflow_run event: eventName=${context.eventName}`);
+            throw new Error(`This is not workflow_run event: ${context.eventName}`);
         }
         const token = core.getInput('github_token');
         const octokit = github.getOctokit(token);
@@ -9615,7 +9610,7 @@ function postStatus(isCleanUp) {
         core.debug(`Jobs for this run are: ${JSON.stringify(jobs, undefined, 2)}`);
         const job = jobs.data.jobs.find(j => j.run_id === context.runId);
         if (!job) {
-            throw new Error(`job not found: ${jobName(context.job)} / run id: ${context.runId}`);
+            throw new Error(`job not found: ${jobName(context.job)}, run id: ${context.runId}`);
         }
         const state = context.payload.action === 'requested' && requestedAsPending()
             ? 'pending'
