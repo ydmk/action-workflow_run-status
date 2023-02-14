@@ -45,7 +45,8 @@
       "@typescript-eslint/semi": ["error", "never"],
       "@typescript-eslint/type-annotation-spacing": "error",
       "@typescript-eslint/unbound-method": "error",
-      "i18n-text/no-en": 0
+      "i18n-text/no-en": 0,
+      "import/no-unresolved": "off"
     },
     "env": {
       "node": true,
@@ -53,3 +54,4 @@
       "jest/globals": true
     }
   }
+  

@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as stateHelper from './state-helper'
 import {wait} from './wait'
-import { WorkflowJob } from "@octokit/webhooks-types";
+import {WorkflowJob} from '@octokit/webhooks-types'
 
 type Status = 'failure' | 'pending' | 'success'
 
@@ -26,10 +26,7 @@ async function cleanup(): Promise<void> {
   }
 }
 
-function job2status(
-  job: WorkflowJob,
-  isCleanUp: boolean
-): Status {
+function job2status(job: WorkflowJob, isCleanUp: boolean): Status {
   if (!isCleanUp) {
     return 'pending'
   }
@@ -70,7 +67,9 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
   const token = core.getInput('github_token')
   const octokit = github.getOctokit(token)
   if (isCleanUp) {
-    core.info('Waiting 10 secs to wait for other steps job completion are propagated to GitHub API response.')
+    core.info(
+      'Waiting 10 secs to wait for other steps job completion are propagated to GitHub API response.'
+    )
     await wait(10 * 1000)
   }
   const jobs = await octokit.rest.actions.listJobsForWorkflowRun({
@@ -83,7 +82,9 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
   core.debug(`Jobs for this run are: ${JSON.stringify(jobs, undefined, 2)}`)
   const job = jobs.data.jobs.find(j => j.run_id === context.runId)
   if (!job) {
-    throw new Error(`job not found: ${jobName(context.job)}, run id: ${context.runId}`)
+    throw new Error(
+      `job not found: ${jobName(context.job)}, run id: ${context.runId}`
+    )
   }
   const state =
     context.payload.action === 'requested' && requestedAsPending()
