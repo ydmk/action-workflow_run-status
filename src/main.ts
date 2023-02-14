@@ -91,6 +91,7 @@ function jobName(job: string): string {
 
 async function postStatus(isCleanUp: boolean): Promise<void> {
   const context = github.context
+  core.debug(`Context received is: ${JSON.stringify(context, undefined, 2)}`)
   if (context.eventName !== 'workflow_run') {
     throw new Error(
       `This is not workflow_run event: eventName=${context.eventName}`
@@ -111,9 +112,10 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
     filter: 'latest',
     per_page: 100
   })
-  const job = jobs.data.jobs.find(j => j.name === jobName(context.job))
+  core.debug(`Jobs for this run are: ${JSON.stringify(jobs, undefined, 2)}`)
+  const job = jobs.data.jobs.find(j => j.run_id === context.runId)
   if (!job) {
-    throw new Error(`job not found: ${jobName(context.job)}`)
+    throw new Error(`job not found: ${jobName(context.job)} / run id: ${context.runId}`)
   }
   const state =
     context.payload.action === 'requested' && requestedAsPending()
@@ -129,7 +131,7 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
     } => ${context.eventName})`,
     target_url: !job.html_url ? undefined : job.html_url
   })
-  core.debug(JSON.stringify(resp, null, 2))
+  core.debug(`Commit response: ${JSON.stringify(resp, null, 2)}`)
 }
 
 function requestedAsPending(): boolean {

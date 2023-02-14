@@ -13,7 +13,7 @@ the attached commit status.
 
 ## Usage
 
-Just add `haya14busa/action-workflow_run-status@v1` as a first step of workflow
+Just add `din-global/reusable-workflows/.github/actions/action-workflow_run-status@main` as a first step of workflow
 jobs triggered by `workflow_run` event.
 
 ```yaml
@@ -28,14 +28,14 @@ jobs:
   post-test-success:
     runs-on: ubuntu-latest
     steps:
-      - uses: haya14busa/action-workflow_run-status@v1
+      - uses: din-global/reusable-workflows/.github/actions/action-workflow_run-status@main
       - uses: actions/checkout@v2
       - run: exit 0
 
   post-test-failure:
     runs-on: ubuntu-latest
     steps:
-      - uses: haya14busa/action-workflow_run-status@v1
+      - uses: din-global/reusable-workflows/.github/actions/action-workflow_run-status@main
       - uses: actions/checkout@v2
       - run: exit 1
 ```

@@ -1,6 +1,6 @@
 name: 'workflow_run status'
 description: 'Associate workflow_run status with the base commit of workflow_run triggered event'
-author: 'haya14busa'
+author: 'haya14busa+ydmk'
 inputs:
   github_token:
     description: 'GITHUB_TOKEN'
@@ -9,6 +9,6 @@ inputs:
     description: 'handle requested action type as pending'
     default: true
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
   post: 'dist/index.js'
