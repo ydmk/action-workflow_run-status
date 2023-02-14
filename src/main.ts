@@ -93,16 +93,12 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
   const context = github.context
   core.debug(`Context received is: ${JSON.stringify(context, undefined, 2)}`)
   if (context.eventName !== 'workflow_run') {
-    throw new Error(
-      `This is not workflow_run event: eventName=${context.eventName}`
-    )
+    throw new Error(`This is not workflow_run event: ${context.eventName}`)
   }
   const token = core.getInput('github_token')
   const octokit = github.getOctokit(token)
   if (isCleanUp) {
-    core.info(
-      'Waiting 10 secs to wait for other steps job completion are propagated to GitHub API response.'
-    )
+    core.info('Waiting 10 secs to wait for other steps job completion are propagated to GitHub API response.')
     await wait(10 * 1000)
   }
   const jobs = await octokit.rest.actions.listJobsForWorkflowRun({
@@ -115,7 +111,7 @@ async function postStatus(isCleanUp: boolean): Promise<void> {
   core.debug(`Jobs for this run are: ${JSON.stringify(jobs, undefined, 2)}`)
   const job = jobs.data.jobs.find(j => j.run_id === context.runId)
   if (!job) {
-    throw new Error(`job not found: ${jobName(context.job)} / run id: ${context.runId}`)
+    throw new Error(`job not found: ${jobName(context.job)}, run id: ${context.runId}`)
   }
   const state =
     context.payload.action === 'requested' && requestedAsPending()
